@@ -12,6 +12,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.decorators import login_required
+from decimal import Decimal
 # user model import User
 from django.contrib.auth import get_user_model
 
@@ -79,6 +80,20 @@ def create_payment(request):
       print("=== PAYMENT REQUEST DATA ===")
       print(json.dumps(data, indent=4))
       print("=" * 50)
+      
+      # Create PaymentTransaction record
+      try:
+          from .models import PaymentTransaction
+          payment_transaction = PaymentTransaction.objects.create(
+              user=user,
+              transaction_id=tran_id,
+              amount=Decimal('100.00'),  # Using fixed amount from your data
+              status='initiated',
+              gateway_response={'payment_request': data}
+          )
+          print(f"Created PaymentTransaction record: {payment_transaction}")
+      except Exception as db_error:
+          print(f"Failed to create PaymentTransaction: {db_error}")
       
       try:
           response = requests.post(endpoint, json=data)
