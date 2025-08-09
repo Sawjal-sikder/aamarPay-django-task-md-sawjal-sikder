@@ -1,3 +1,7 @@
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 import json
 from urllib import request
 import uuid
@@ -13,12 +17,13 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+store_id = settings.AAMARPAY_STORE_ID
+signature_key = settings.AAMARPAY_SIGNATURE_KEY
+      
 @csrf_exempt
 @require_POST
 @login_required
 def create_payment(request):
-      store_id = settings.AAMARPAY_STORE_ID
-      signature_key = settings.AAMARPAY_SIGNATURE_KEY
       endpoint = settings.AAMARPAY_ENDPOINT
       
       success_url = request.build_absolute_uri(reverse(settings.SUCCESS_URL_NAME))
@@ -71,12 +76,19 @@ def create_payment(request):
       "type": "json"
       }
 
-      # print("Payment data:", json.dumps(data, indent=4))
+      print("=== PAYMENT REQUEST DATA ===")
+      print(json.dumps(data, indent=4))
+      print("=" * 50)
       
       try:
           response = requests.post(endpoint, json=data)
           response.raise_for_status()
           result = response.json()
+          
+          print("=== PAYMENT RESPONSE ===")
+          print(json.dumps(result, indent=4))
+          print("=" * 50)
+          
           return JsonResponse(result)
       except requests.exceptions.RequestException as e:
           return JsonResponse({"error": f"Payment request failed: {str(e)}"}, status=500)
@@ -84,19 +96,21 @@ def create_payment(request):
           return JsonResponse({"error": "Invalid response from payment gateway"}, status=500)
       except Exception as e:
           return JsonResponse({"error": str(e)}, status=500)
-    
-    
-    
-def transaction_response(request):
-      try:
-            result = json.loads(request.body)
-            tran_id = result.get("tran_id")
-            store_id = result.get("store_id")
-            signature_key = result.get("signature_key")
-            return JsonResponse({
-                  "tran_id": tran_id,
-                  "store_id": store_id,
-                  "signature_key": signature_key
-            })
-      except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
+
+
+
+
+
+AAMARPAY_BASE_URL = "https://sandbox.aamarpay.com/api/v1/trxcheck/request.php"
+
+
+def get_aamarpay_transaction(request_id):
+    params = {
+        "request_id": request_id,
+        "store_id": store_id,
+        "signature_key": signature_key,
+        "type": "json"
+    }
+    r = requests.get(AAMARPAY_BASE_URL, params=params, timeout=10)
+    r.raise_for_status()
+    return r.json()
