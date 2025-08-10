@@ -150,3 +150,14 @@ AAMARPAY_ENDPOINT = os.getenv("endpoint")
 SUCCESS_URL_NAME = 'payment_success'
 FAIL_URL_NAME = 'payment_fail'
 CANCEL_URL_NAME = 'payment_cancel'
+
+
+
+
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/0"
+CELERY_RESULT_EXPIRES = 3600
+
+
+
+LOGIN_URL = '/api/login/'

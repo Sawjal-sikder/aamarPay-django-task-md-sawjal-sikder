@@ -1,5 +1,4 @@
-from django.shortcuts import render
-from rest_framework import permissions, generics
+from rest_framework import permissions, generics, status
 from .payment import create_payment, get_aamarpay_transaction
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -10,6 +9,11 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from decimal import Decimal
 import requests
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from .models import FileUpload
+from .serializer import FileUploadSerializer, PaymentTransactionSerializer, ActivityLogSerializer
+from .task import process_file_task
 
 User = get_user_model()
 
@@ -21,8 +25,6 @@ class CreatePaymentView(generics.CreateAPIView):
       def post(self, request, *args, **kwargs):
                         
             response = create_payment(request)
-            print("=== CREATE PAYMENT RESPONSE ===")
-            print(f"response: {response}")
             
             if isinstance(response, JsonResponse):
                  
@@ -66,8 +68,6 @@ def payment_success(request):
             data_source.get("opt_b")
         )
     
-    print(f"Extracted request_id: {request_id}")
-    print(f"Callback data: {callback_data}")
     
     # Handle case where request_id might be a list
     if isinstance(request_id, list):
@@ -85,8 +85,6 @@ def payment_success(request):
         # Get transaction details from AamarPay
         transaction_data = get_aamarpay_transaction(request_id)
         
-        print(f"=== TRANSACTION VERIFICATION SUCCESS ===")
-        print(f"Transaction data: {transaction_data}")
         
         # Extract transaction information
         pay_status = callback_data.get('pay_status', 'Unknown')
@@ -119,7 +117,6 @@ def payment_success(request):
         try:
             # Try to find existing transaction
             payment_transaction = PaymentTransaction.objects.get(transaction_id=request_id)
-            print(f"Found existing transaction: {payment_transaction}")
             
             # Update existing transaction
             payment_transaction.status = transaction_status
@@ -129,10 +126,8 @@ def payment_success(request):
                 'verification_timestamp': timezone.now().isoformat()
             }
             payment_transaction.save()
-            print(f"Updated transaction status to: {transaction_status}")
             
         except PaymentTransaction.DoesNotExist:
-            print(f"Transaction {request_id} not found in database, creating new record")
             
             # Create new transaction record (without user for callback)
             payment_transaction = PaymentTransaction.objects.create(
@@ -146,7 +141,6 @@ def payment_success(request):
                     'verification_timestamp': timezone.now().isoformat()
                 }
             )
-            print(f"Created new transaction record: {payment_transaction}")
         
         # Log the activity
         try:
@@ -176,14 +170,13 @@ def payment_success(request):
         })
         
     except requests.exceptions.RequestException as e:
-        print(f"Transaction verification failed: {e}")
         return Response({
             "error": f"Transaction verification failed: {str(e)}",
             "request_id": request_id,
             "callback_data": callback_data
         }, status=500)
     except ValueError as e:
-        print(f"Invalid response from AamarPay: {e}")
+
         return Response({
             "error": "Invalid response from payment gateway",
             "request_id": request_id,
@@ -196,3 +189,57 @@ def payment_fail(request):
 
 def payment_cancel(request):
     return Response({"message": "Payment was canceled!"})
+
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def upload_file(request):
+    # Check if user has a successful payment
+    has_paid = PaymentTransaction.objects.filter(user=request.user, status='success').exists()
+    if not has_paid:
+        # For API, better return a JSON response, not redirect
+        return Response(
+            {"detail": "Payment required before uploading files.", "payment_url": "/api/initiate-payment/"},
+            status=status.HTTP_402_PAYMENT_REQUIRED  # 402 Payment Required (informal)
+        )
+
+    if 'file' not in request.FILES:
+        return Response({"error": "No file provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+    file = request.FILES['file']
+    if not file.name.endswith((".txt", ".docx")):
+        return Response({"error": "Only .txt or .docx files allowed."}, status=status.HTTP_400_BAD_REQUEST)
+
+    record = FileUpload.objects.create(
+        user=request.user,
+        file=file,
+        filename=file.name,
+        status="processing"
+    )
+
+    process_file_task.delay(record.id)
+
+    return Response({"message": "File uploaded successfully and is being processed."}, status=status.HTTP_201_CREATED)
+
+
+class FileUploadListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = FileUploadSerializer
+
+    def get_queryset(self):
+        return FileUpload.objects.filter(user=self.request.user).order_by('-upload_time')
+
+class PaymentTransactionListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PaymentTransactionSerializer
+
+    def get_queryset(self):
+        return PaymentTransaction.objects.filter(user=self.request.user).order_by('-timestamp')
+    
+class ActivityLogListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ActivityLogSerializer
+
+    def get_queryset(self):
+        return ActivityLog.objects.filter(user=self.request.user).order_by('-timestamp')

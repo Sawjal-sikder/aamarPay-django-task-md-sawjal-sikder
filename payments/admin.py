@@ -9,6 +9,12 @@ class FileUploadAdmin(admin.ModelAdmin):
     search_fields = ("filename", "user__username", "user__email")
     ordering = ("-upload_time",)
 
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
 
 @admin.register(PaymentTransaction)
 class PaymentTransactionAdmin(admin.ModelAdmin):
@@ -16,6 +22,13 @@ class PaymentTransactionAdmin(admin.ModelAdmin):
     list_filter = ("status", "timestamp")
     search_fields = ("transaction_id", "user__username", "user__email")
     ordering = ("-timestamp",)
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_superuser
+
 
 
 @admin.register(ActivityLog)

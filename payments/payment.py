@@ -77,9 +77,6 @@ def create_payment(request):
       "type": "json"
       }
 
-      print("=== PAYMENT REQUEST DATA ===")
-      print(json.dumps(data, indent=4))
-      print("=" * 50)
       
       # Create PaymentTransaction record
       try:
@@ -91,7 +88,6 @@ def create_payment(request):
               status='initiated',
               gateway_response={'payment_request': data}
           )
-          print(f"Created PaymentTransaction record: {payment_transaction}")
       except Exception as db_error:
           print(f"Failed to create PaymentTransaction: {db_error}")
       
@@ -114,22 +110,15 @@ def create_payment(request):
           except Exception as update_error:
               print(f"Failed to update PaymentTransaction: {update_error}")
           
-          print("=== PAYMENT RESPONSE ===")
-          print(json.dumps(result, indent=4))
-          print("=" * 50)
           
           return JsonResponse(result)
       except requests.exceptions.Timeout as e:
-          print(f"Payment request timeout: {e}")
           return JsonResponse({"error": "Payment gateway timeout. Please try again."}, status=504)
       except requests.exceptions.RequestException as e:
-          print(f"Payment request failed: {e}")
           return JsonResponse({"error": f"Payment request failed: {str(e)}"}, status=500)
       except json.JSONDecodeError as e:
-          print(f"Invalid JSON response: {e}")
           return JsonResponse({"error": "Invalid response from payment gateway"}, status=500)
       except Exception as e:
-          print(f"Unexpected error: {e}")
           return JsonResponse({"error": str(e)}, status=500)
 
 
