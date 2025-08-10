@@ -6,6 +6,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('accounts.urls')),
     path('api/', include('payments.urls')),
+    path('dashboard/', include('dashboard.urls')),
 ]
 def custom_404_handler(request, exception):
     return JsonResponse({"error": "Invalid URL, please correct the URL"}, status=404)

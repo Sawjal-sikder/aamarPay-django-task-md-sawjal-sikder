@@ -142,7 +142,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
-# for AamarPay payment settings
 AAMARPAY_STORE_ID = os.getenv("store_id")
 AAMARPAY_SIGNATURE_KEY = os.getenv("signature_key")
 AAMARPAY_ENDPOINT = os.getenv("endpoint")
