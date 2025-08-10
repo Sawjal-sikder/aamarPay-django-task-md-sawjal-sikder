@@ -5,43 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}My Django Site{% endblock %}</title>
 
-    <!-- Bootstrap CSS (optional) -->
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <!-- Font Awesome CDN -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+        body {
+            display: flex;
+        }
+        .sidebar {
+            min-width: 220px;
+            max-width: 220px;
+            background-color: #343a40;
+            color: white;
+            height: 100vh;
+            padding-top: 20px;
+        }
+        .sidebar a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            display: block;
+        }
+        .sidebar a:hover {
+            background-color: #495057;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 20px;
+        }
+    </style>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">Dashboard</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto">
-                    {% if user.is_authenticated %}
-                        <li class="nav-item"><a class="nav-link" href="#">Welcome, {{ user.username }}</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Logout</a></li>
-                    {% else %}
-                        <li class="nav-item"><a class="nav-link" href="#">Login</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#">Register</a></li>
-                    {% endif %}
-                </ul>
-            </div>
-        </div>
-    </nav>
+    <!-- Sidebar -->
+    <div class="sidebar">
+    {% if user.is_authenticated %}
+        {% if user_has_paid %}
+            <a href="{% url 'file_upload' %}">
+                <i class="fas fa-upload"></i> Upload File
+            </a>
+        {% endif %}
+
+        <a href="{% url 'dashboard' %}">
+            <h3>Dashboard</h3>
+        </a>
+        <a href="">
+            <i class="fas fa-file-alt"></i> Uploaded Files
+        </a>
+
+        <a href="">
+            <i class="fas fa-list"></i> User Activity
+        </a>
+
+        <a href="{% url 'transition' %}">
+            <i class="fas fa-credit-card"></i> Payment History
+        </a>
+
+        <a href="">
+            <i class="fas fa-sign-out-alt"></i> Logout
+        </a>
+    {% else %}
+        <a href="">
+            <i class="fas fa-sign-in-alt"></i> Login
+        </a>
+
+        <a href="">
+            <i class="fas fa-user-plus"></i> Register
+        </a>
+    {% endif %}
+</div>
+
 
     <!-- Main Content -->
-    <main class="container py-4">
-        {% block content %}{% endblock %}
-    </main>
+    <div class="content">
+        {% block content %}
+        <h1>Welcome to Dashboard</h1>
+        <p>This is the homepage content.</p>
+        {% endblock %}
+    </div>
 
-    <!-- Footer -->
-<!--    <footer class="bg-dark text-white text-center py-3">-->
-<!--        &copy; {{ year }} MySite. All rights reserved.-->
-<!--    </footer>-->
-
-    <!-- Bootstrap JS (optional) -->
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
