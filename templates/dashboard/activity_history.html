@@ -1,0 +1,40 @@
+{% extends "main.html" %}
+
+{% block title %}Dashboard - User Activity{% endblock %}
+
+{% block content %}
+<h1>User Activity</h1>
+<table class="table table-striped table-hover table-bordered align-middle">
+  <thead class="table-dark" >
+    <tr>
+      <th scope="col">User</th>
+      <th scope="col">Action</th>
+      <th scope="col">Metadata</th>
+      <th scope="col">Timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in activity_logs %}
+    <tr>
+      <td>{{ item.user }}</td>
+      <td>{{ item.action }}</td>
+<td>
+  {% if item.metadata %}
+    {% for key, value in item.metadata.items %}
+      <strong>{{ key }}:</strong> {{ value }}<br>
+    {% endfor %}
+  {% else %}
+    -
+  {% endif %}
+</td>
+      <td>{{ item.timestamp|date:"Y-m-d H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5" class="text-center">No item transactions found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

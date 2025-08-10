@@ -1,3 +1,4 @@
+from payments.models import *
 from django.shortcuts import render
 from django.contrib import messages
 from django.shortcuts import render, redirect
@@ -24,6 +25,21 @@ def LogoutView(request):
 @login_required(login_url='login')
 def home(request):
     return render(request, 'main.html')
+
+
+@login_required(login_url='login')
+def uploadedfilelist(request):
+    files = FileUpload.objects.filter(user=request.user).order_by('-upload_time')  # corrected order field
+    return render(request, "dashboard/file_upload_list.html", {'files': files})
+
+@login_required(login_url='login')
+def activity(request):
+    activity_logs = ActivityLog.objects.filter(user=request.user).order_by('-timestamp')
+    return render(request, "dashboard/activity_history.html", {'activity_logs': activity_logs})
+
+
 @login_required(login_url='login')
 def payment_history(request):
-    return render(request, "dashboard/payment_history.html")
+    payments = PaymentTransaction.objects.filter(user=request.user).order_by('-timestamp')
+
+    return render(request, "dashboard/payment_history.html", {'payments': payments})

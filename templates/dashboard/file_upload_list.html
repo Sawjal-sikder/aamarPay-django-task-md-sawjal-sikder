@@ -1,0 +1,32 @@
+{% extends "main.html" %}
+
+{% block title %}Dashboard - Uploaded Files{% endblock %}
+
+{% block content %}
+<h1>Uploaded Files</h1>
+<table class="table table-striped table-hover table-bordered align-middle">
+  <thead class="table-dark" >
+    <tr>
+      <th scope="col">User</th>
+      <th scope="col">File name</th>
+      <th scope="col">Status</th>
+      <th scope="col">Word Count</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in files %}
+    <tr>
+      <td>{{ item.user }}</td>
+      <td>{{ item.filename }}</td>
+      <td>{{ item.status }}</td>
+      <td>{{ item.word_count }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5" class="text-center">No item transactions found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

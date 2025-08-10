@@ -1,8 +1,42 @@
 {% extends "main.html" %}
 
-{% block title %}Home - My Django Site{% endblock %}
+{% block title %}Dashboard - Payment History{% endblock %}
 
 {% block content %}
-<h1>Welcome to My Site</h1>
-<p>This is the homepage content.</p>
+<h1>Payment History</h1>
+<table class="table table-striped table-hover table-bordered align-middle">
+  <thead class="table-dark" >
+    <tr>
+      <th scope="col">Transaction ID</th>
+      <th scope="col">User</th>
+      <th scope="col">Amount (৳)</th>
+      <th scope="col">Status</th>
+      <th scope="col">Timestamp</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for payment in payments %}
+    <tr>
+      <td>{{ payment.transaction_id }}</td>
+      <td>{{ payment.user }}</td>
+      <td>{{ payment.amount }}</td>
+      <td>
+        {% if payment.status == "success" %}
+          <span class="badge bg-success text-uppercase">{{ payment.status }}</span>
+        {% elif payment.status == "failed" %}
+          <span class="badge bg-danger text-uppercase">{{ payment.status }}</span>
+        {% else %}
+          <span class="badge bg-secondary text-uppercase">{{ payment.status }}</span>
+        {% endif %}
+      </td>
+      <td>{{ payment.timestamp|date:"Y-m-d H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5" class="text-center">No payment transactions found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
 {% endblock %}

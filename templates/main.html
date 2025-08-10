@@ -44,20 +44,20 @@
     <!-- Sidebar -->
     <div class="sidebar">
     {% if user.is_authenticated %}
-        {% if user_has_paid %}
-            <a href="{% url 'file_upload' %}">
-                <i class="fas fa-upload"></i> Upload File
-            </a>
-        {% endif %}
+<!--        {% if user_has_paid %}-->
+<!--            <a href="{% url 'file_upload' %}">-->
+<!--                <i class="fas fa-upload"></i> Upload File-->
+<!--            </a>-->
+<!--        {% endif %}-->
 
-        <a href="{% url 'dashboard' %}">
+        <a href="{% url 'dashboard' %}" style="border-bottom: 1px solid white;">
             <h3>Dashboard</h3>
         </a>
-        <a href="{% url 'transition' %}">
+        <a href="{% url 'uploadedfilelist' %}">
             <i class="fas fa-file-alt"></i> Uploaded Files
         </a>
 
-        <a href="">
+        <a href="{% url 'activity' %}">
             <i class="fas fa-list"></i> User Activity
         </a>
 
@@ -69,6 +69,9 @@
             <i class="fas fa-sign-out-alt"></i> Logout
         </a>
     {% else %}
+        <a href="{% url 'dashboard' %}" style="border-bottom: 1px solid white;">
+            <h3>Dashboard</h3>
+        </a>
         <a href="{% url 'LoginView' %}">
             <i class="fas fa-sign-in-alt"></i> Login
         </a>
