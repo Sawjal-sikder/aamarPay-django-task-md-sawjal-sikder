@@ -96,20 +96,40 @@ def create_payment(request):
           print(f"Failed to create PaymentTransaction: {db_error}")
       
       try:
-          response = requests.post(endpoint, json=data)
+          # Add timeout and connection settings to prevent worker hanging
+          response = requests.post(
+              endpoint, 
+              json=data, 
+              timeout=30,  # 30 second timeout
+              headers={'Connection': 'close'}  # Don't keep connection alive
+          )
           response.raise_for_status()
           result = response.json()
+          
+          # Update PaymentTransaction with response
+          try:
+              if 'payment_transaction' in locals():
+                  payment_transaction.gateway_response.update({'payment_response': result})
+                  payment_transaction.save()
+          except Exception as update_error:
+              print(f"Failed to update PaymentTransaction: {update_error}")
           
           print("=== PAYMENT RESPONSE ===")
           print(json.dumps(result, indent=4))
           print("=" * 50)
           
           return JsonResponse(result)
+      except requests.exceptions.Timeout as e:
+          print(f"Payment request timeout: {e}")
+          return JsonResponse({"error": "Payment gateway timeout. Please try again."}, status=504)
       except requests.exceptions.RequestException as e:
+          print(f"Payment request failed: {e}")
           return JsonResponse({"error": f"Payment request failed: {str(e)}"}, status=500)
       except json.JSONDecodeError as e:
+          print(f"Invalid JSON response: {e}")
           return JsonResponse({"error": "Invalid response from payment gateway"}, status=500)
       except Exception as e:
+          print(f"Unexpected error: {e}")
           return JsonResponse({"error": str(e)}, status=500)
 
 

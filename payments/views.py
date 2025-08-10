@@ -69,6 +69,10 @@ def payment_success(request):
     print(f"Extracted request_id: {request_id}")
     print(f"Callback data: {callback_data}")
     
+    # Handle case where request_id might be a list
+    if isinstance(request_id, list):
+        request_id = request_id[0] if request_id else None
+    
     if not request_id:
         return Response({
             "error": "Missing request_id",
@@ -88,6 +92,14 @@ def payment_success(request):
         pay_status = callback_data.get('pay_status', 'Unknown')
         amount = callback_data.get('amount', '0.00')
         
+        # Handle case where pay_status might be a list
+        if isinstance(pay_status, list):
+            pay_status = pay_status[0] if pay_status else 'Unknown'
+        
+        # Handle case where amount might be a list
+        if isinstance(amount, list):
+            amount = amount[0] if amount else '0.00'
+        
         # Convert amount to Decimal
         try:
             amount_decimal = Decimal(str(amount).replace(',', ''))
@@ -95,9 +107,9 @@ def payment_success(request):
             amount_decimal = Decimal('0.00')
         
         # Determine transaction status
-        if pay_status.lower() in ['successful', 'success', 'completed']:
+        if str(pay_status).lower() in ['successful', 'success', 'completed']:
             transaction_status = 'success'
-        elif pay_status.lower() in ['failed', 'failure', 'error']:
+        elif str(pay_status).lower() in ['failed', 'failure', 'error']:
             transaction_status = 'failed'
         else:
             transaction_status = 'initiated'
@@ -179,10 +191,8 @@ def payment_success(request):
         }, status=500)
 
 
-@api_view(["GET", "POST"])
 def payment_fail(request):
     return Response({"message": "Payment failed!"})
 
-@api_view(["GET", "POST"])
 def payment_cancel(request):
     return Response({"message": "Payment was canceled!"})
