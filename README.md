@@ -138,3 +138,16 @@ ENDPOINT=https://sandbox.aamarpay.com/jsonpost.php
    - `/api/dashboard/transition/` for payments transaction
 
 ---
+
+## Postman Collection
+
+You can use the following Postman collection to test all API endpoints easily:
+
+[Payment API Postman Collection](https://documenter.getpostman.com/view/45067236/2sB3BEmUus)
+
+https://documenter.getpostman.com/view/45067236/2sB3BEmUus
+
+- Import this collection into Postman to access pre-configured requests for authentication, payment initiation, callbacks, and transaction verification.
+- Update environment variables in Postman as needed for your local setup.
+
+---
